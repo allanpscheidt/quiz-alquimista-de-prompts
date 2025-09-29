@@ -5,9 +5,9 @@ import Head from 'next/head';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, ChevronRight, Award, Sparkles, RotateCw, User } from 'lucide-react';
 
-// --- INÍCIO DA ZONA SEGURA (TODA A LÓGICA DE DADOS E FUNÇÕES FICA AQUI) ---
+// --- INÍCIO DA ZONA SEGURA (TUDO QUE É DEFINIÇÃO FICA AQUI FORA) ---
 
-// --- ESTRUTURA DE DADOS ---
+// --- ESTRUTURAS DE DADOS ---
 type Question = {
   question: string;
   options: string[];
@@ -25,8 +25,9 @@ type PersonalizedQuestion = Question & {
   originalLevel: number;
 };
 
-// --- BANCO DE PERGUNTAS COMPLETO ---
+// --- BANCO DE PERGUNTAS E CONSTANTES ---
 const quizData: QuizLevel[] = [
+    // ... (todo o seu JSON de perguntas permanece aqui, sem alterações)
     {
         level: 1,
         title: "Conceitos Fundamentais",
@@ -55,7 +56,7 @@ const quizData: QuizLevel[] = [
             { question: "Como aplicativos como o Google Fotos organizam suas imagens?", options: ["Por data apenas", "IA reconhece pessoas, objetos e locais nas fotos", "Aleatoriamente", "Por tamanho do arquivo"], correctAnswer: "IA reconhece pessoas, objetos e locais nas fotos", explanation: "A IA identifica automaticamente rostos, animais, objetos e lugares para organizar e categorizar suas fotos." },
             { question: "O que acontece quando você fala 'Ok Google' ou 'Ei Siri'?", options: ["O celular liga", "IA reconhece o comando de ativação e começa a ouvir", "Abre um aplicativo", "Toca uma música"], correctAnswer: "IA reconhece o comando de ativação e começa a ouvir", explanation: "A IA está sempre 'ouvindo' por essas palavras-chave específicas para saber quando você quer dar um comando." },
             { question: "Por que o teclado do celular às vezes completa suas palavras?", options: ["Adivinha o que você pensa", "IA prevê palavras baseada no que você digitou", "Copia mensagens antigas", "É programado com todas as palavras"], correctAnswer: "IA prevê palavras baseada no que você digitou", explanation: "A IA analisa padrões de texto e aprende seu estilo de escrita para sugerir palavras e completar frases." },
-            { question: "Como bancos detectam transações suspeitas?", options: ["Funcionários verificam tudo manually", "IA analisa padrões de gastos para identificar fraudes", "Bloqueia todas as compras online", "Só funciona durante o dia"], correctAnswer: "IA analisa padrões de gastos para identificar fraudes", explanation: "Bancos como o Nubank usam IA para aprender seus hábitos de gasto e identificar transações que fogem do padrão normal." },
+            { question: "Como bancos detectam transações suspeitas?", options: ["Funcionários verificam tudo manualmente", "IA analisa padrões de gastos para identificar fraudes", "Bloqueia todas as compras online", "Só funciona durante o dia"], correctAnswer: "IA analisa padrões de gastos para identificar fraudes", explanation: "Bancos como o Nubank usam IA para aprender seus hábitos de gasto e identificar transações que fogem do padrão normal." },
             { question: "Como aplicativos como 99 e Uber calculam o preço da corrida?", options: ["Preço fixo sempre", "IA considera distância, trânsito e demanda", "Motorista decide o preço", "Só pela distância"], correctAnswer: "IA considera distância, trânsito e demanda", explanation: "A IA analisa múltiplos fatores em tempo real para calcular um preço justo baseado nas condições atuais." },
             { question: "Por que alguns aplicativos de delivery sugerem restaurantes específicos?", options: ["São pagos para aparecer primeiro", "IA analisa suas preferências e histórico de pedidos", "Aparecem aleatoriamente", "Só mostram os mais baratos"], correctAnswer: "IA analisa suas preferências e histórico de pedidos", explanation: "A IA aprende com seus pedidos anteriores para sugerir restaurantes e pratos que você provavelmente gostará." },
             { question: "O que faz um chatbot de atendimento ao cliente funcionar?", options: ["Pessoas digitando respostas", "IA que entende perguntas e busca respostas adequadas", "Respostas automáticas programadas", "Conexão direta com o gerente"], correctAnswer: "IA que entende perguntas e busca respostas adequadas", explanation: "Chatbots usam IA para entender a intenção do cliente e fornecer respostas relevantes ou direcionar para atendimento humano." },
@@ -141,6 +142,7 @@ const finalRanks = [
   { score: 95, rank: 'Grão-Mestre Alquimista' },
 ];
 
+// --- FUNÇÕES AUXILIARES ---
 const shuffleArray = <T>(array: T[]): T[] => {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -163,6 +165,7 @@ const generatePersonalizedQuiz = (knowledgeLevel: number): PersonalizedQuestion[
     return shuffleArray(personalizedQuiz);
 };
 
+// --- COMPONENTES AUXILIARES ---
 const ProgressBar: FC<{ value: number; max: number }> = ({ value, max }) => {
   const percentage = max > 0 ? (value / max) * 100 : 0;
   return (
@@ -186,9 +189,10 @@ const QuizCard: FC<{ children: ReactNode; className?: string }> = ({ children, c
     >
       {children}
     </motion.div>
-  );
+);
 
 // --- FIM DA ZONA SEGURA ---
+
 
 // --- COMPONENTE PRINCIPAL ---
 export default function PromptAlchemistQuiz() {
