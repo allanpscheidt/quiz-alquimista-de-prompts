@@ -7,7 +7,6 @@ import { CheckCircle, XCircle, ChevronRight, Award, Sparkles, RotateCw, User } f
 
 // --- INÍCIO DA ZONA SEGURA (DEFINIÇÕES GLOBAIS) ---
 
-// --- ESTRUTURAS DE DADOS ---
 type Question = {
   question: string;
   options: string[];
@@ -25,7 +24,6 @@ type PersonalizedQuestion = Question & {
   originalLevel: number;
 };
 
-// --- BANCO DE PERGUNTAS E CONSTANTES ---
 const quizData: QuizLevel[] = [
     {
         level: 1,
@@ -194,6 +192,8 @@ const QuizCard: FC<{ children: ReactNode; className?: string }> = ({ children, c
 
 // --- COMPONENTE PRINCIPAL ---
 export default function PromptAlchemistQuiz() {
+  
+  // --- DEFINIÇÕES DE ESTADO (HOOKS) ---
   const [quizPhase, setQuizPhase] = useState<'welcome' | 'selfAssessment' | 'playing' | 'results'>('welcome');
   const [playerName, setPlayerName] = useState('');
   const [selfAssessedLevel, setSelfAssessedLevel] = useState<number>(0);
@@ -205,6 +205,7 @@ export default function PromptAlchemistQuiz() {
   const [isAnswered, setIsAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
+  // --- LÓGICA DE MEMORIZAÇÃO (useMemo) ---
   const shuffledOptions = useMemo(() => {
     if (personalizedQuiz.length > 0 && personalizedQuiz[currentQuestionIndex]) {
       return shuffleArray(personalizedQuiz[currentQuestionIndex].options);
@@ -212,6 +213,44 @@ export default function PromptAlchemistQuiz() {
     return [];
   }, [personalizedQuiz, currentQuestionIndex]);
 
+  const finalResult = useMemo(() => {
+    if (quizPhase !== 'results' || selfAssessedLevel === 0) {
+        return null;
+    }
+
+    const rank = finalRanks.slice().reverse().find(r => score >= r.score) || finalRanks[0];
+    
+    let feedbackMessage = '';
+    const distribution = questionDistribution[selfAssessedLevel as keyof typeof questionDistribution];
+    const totalQuestionsOfLevel = distribution[selfAssessedLevel - 1];
+    const correctAnswersOfLevel = correctAnswersByLevel[selfAssessedLevel as keyof typeof correctAnswersByLevel];
+
+    const feedbackMatrix: Record<number, Record<string, string>> = {
+        1: { superestimacao: "Com humildade, reconhecemos que até os primeiros passos são desafiadores. Parece que os símbolos primordiais ainda guardam segredos para você. A jornada do alquimista é feita de persistência. Estude os grimórios e tente novamente.", quaseLa: "Você já consegue ler os primeiros símbolos e entende a teoria dos elementos. Sua base está sendo construída, mas cuidado para não misturar os ingredientes errados. Continue praticando o básico para firmar seu conhecimento.", confirmacao: "Sua jornada começou com o pé direito! Você demonstrou ter uma base sólida e compreende os fundamentos da Grande Obra. O primeiro degrau foi conquistado com sucesso." },
+        2: { superestimacao: "Suas primeiras destilações resultaram em fumaça e matéria impura. Você se declarou um Aprendiz, mas seu conhecimento prático ainda precisa de atenção. Volte ao laboratório, a teoria precisa de mais experimentos.", quaseLa: "Você já consegue separar substâncias, mas suas mãos ainda tremem. Um erro na destilação pode colocar tudo a perder. Seu potencial é claro, mas a disciplina no laboratório é o que diferencia o aprendiz do mestre.", confirmacao: "O cheiro de enxofre e mercúrio não te assusta mais! Você provou que seu lugar é no laboratório, realizando as primeiras transmutações com a confiança de um verdadeiro Aprendiz." },
+        3: { superestimacao: "Você tentou criar um elixir da cura e produziu apenas uma poção turva. Declarar-se um Praticante exige consistência, e seus resultados mostraram que a sorte não estava ao seu lado. Seus elixires ainda são instáveis.", quaseLa: "Seus elixires funcionam, mas os efeitos são imprevisíveis. Purificar metais exige foco absoluto, e um lapso pode levar a uma pequena explosão. Você está no caminho, mas a maestria exige controle total do processo.", confirmacao: "Com habilidade e precisão, você purificou os metais e criou elixires estáveis. Seu título de Praticante é justo e merecido. O domínio dos princípios alquímicos é evidente em seu trabalho." },
+        4: { superestimacao: "A transmutação complexa que você tentou resultou em chumbo, não em ouro. Foi um Ouro de Tolo. Você se declarou um Adepto, mas as fases superiores da alquimia ainda são um enigma para você. A arrogância é o maior inimigo do conhecimento.", quaseLa: "Você abriu um vislumbre do outro lado, mas o portal que criou é instável. Um conhecimento incompleto em transmutações avançadas é perigoso, podendo romper o véu entre as dimensões. A Grande Obra exige perfeição, não pressa.", confirmacao: "Com sucesso, você navegou pelas fases mais complexas da alquimia. As transmutações avançadas obedecem ao seu comando. Você é, sem dúvida, um Adepto, um verdadeiro iniciado nos grandes mistérios." },
+        5: { superestimacao: "Você se proclamou um Mestre, mas seus resultados revelaram que a Pedra Filosofal é apenas uma miragem em suas mãos. Você produziu Ouro de Tolo. A verdade da alquimia é humilde, e seu conhecimento precisa ser temperado no fogo da prática.", quaseLa: "Você tentou criar a Pedra Filosofal, mas o que obteve foi um catalisador poderoso e instável. Com esse conhecimento parcial, você pode abrir um portal multidimensional perigoso. O poder que você busca exige responsabilidade e domínio absoluto.", confirmacao: "O brilho em suas mãos não deixa dúvidas. A Pedra Filosofal é real. Você compreende todos os segredos da matéria e do espírito. Certamente, você está entre os maiores Alquimistas que já existiram." }
+    };
+
+    if (selfAssessedLevel <= 2 && score >= 80) {
+        feedbackMessage = "Você se apresentou como um mero aprendiz, mas seus resultados brilham com a sabedoria de um Mestre. A humildade é uma virtude, mas não se engane: um poder alquímico imenso reside em você.";
+    } else {
+        const successRate = totalQuestionsOfLevel > 0 ? correctAnswersOfLevel / totalQuestionsOfLevel : 0;
+        
+        if (successRate < 0.3) {
+            feedbackMessage = feedbackMatrix[selfAssessedLevel as keyof typeof feedbackMatrix].superestimacao;
+        } else if (successRate < 1) {
+            feedbackMessage = feedbackMatrix[selfAssessedLevel as keyof typeof feedbackMatrix].quaseLa;
+        } else {
+            feedbackMessage = feedbackMatrix[selfAssessedLevel as keyof typeof feedbackMatrix].confirmacao;
+        }
+    }
+
+    return { rank: rank.rank, feedbackMessage };
+  }, [quizPhase, score, selfAssessedLevel, correctAnswersByLevel]);
+
+  // --- FUNÇÕES HANDLER ---
   const handleNameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (playerName.trim()) setQuizPhase('selfAssessment');
@@ -265,41 +304,7 @@ export default function PromptAlchemistQuiz() {
     setIsCorrect(null);
   };
   
-  const finalResult = useMemo(() => {
-    if (quizPhase !== 'results' || selfAssessedLevel === 0) return null;
-
-    const rank = finalRanks.slice().reverse().find(r => score >= r.score) || finalRanks[0];
-    
-    let feedbackMessage = '';
-    const distribution = questionDistribution[selfAssessedLevel];
-    const totalQuestionsOfLevel = distribution[selfAssessedLevel - 1];
-    const correctAnswersOfLevel = correctAnswersByLevel[selfAssessedLevel];
-
-    const feedbackMatrix: Record<number, Record<string, string>> = {
-        1: { superestimacao: "Com humildade, reconhecemos que até os primeiros passos são desafiadores. Parece que os símbolos primordiais ainda guardam segredos para você. A jornada do alquimista é feita de persistência. Estude os grimórios e tente novamente.", quaseLa: "Você já consegue ler os primeiros símbolos e entende a teoria dos elementos. Sua base está sendo construída, mas cuidado para não misturar os ingredientes errados. Continue praticando o básico para firmar seu conhecimento.", confirmacao: "Sua jornada começou com o pé direito! Você demonstrou ter uma base sólida e compreende os fundamentos da Grande Obra. O primeiro degrau foi conquistado com sucesso." },
-        2: { superestimacao: "Suas primeiras destilações resultaram em fumaça e matéria impura. Você se declarou um Aprendiz, mas seu conhecimento prático ainda precisa de atenção. Volte ao laboratório, a teoria precisa de mais experimentos.", quaseLa: "Você já consegue separar substâncias, mas suas mãos ainda tremem. Um erro na destilação pode colocar tudo a perder. Seu potencial é claro, mas a disciplina no laboratório é o que diferencia o aprendiz do mestre.", confirmacao: "O cheiro de enxofre e mercúrio não te assusta mais! Você provou que seu lugar é no laboratório, realizando as primeiras transmutações com a confiança de um verdadeiro Aprendiz." },
-        3: { superestimacao: "Você tentou criar um elixir da cura e produziu apenas uma poção turva. Declarar-se um Praticante exige consistência, e seus resultados mostraram que a sorte não estava ao seu lado. Seus elixires ainda são instáveis.", quaseLa: "Seus elixires funcionam, mas os efeitos são imprevisíveis. Purificar metais exige foco absoluto, e um lapso pode levar a uma pequena explosão. Você está no caminho, mas a maestria exige controle total do processo.", confirmacao: "Com habilidade e precisão, você purificou os metais e criou elixires estáveis. Seu título de Praticante é justo e merecido. O domínio dos princípios alquímicos é evidente em seu trabalho." },
-        4: { superestimacao: "A transmutação complexa que você tentou resultou em chumbo, não em ouro. Foi um Ouro de Tolo. Você se declarou um Adepto, mas as fases superiores da alquimia ainda são um enigma para você. A arrogância é o maior inimigo do conhecimento.", quaseLa: "Você abriu um vislumbre do outro lado, mas o portal que criou é instável. Um conhecimento incompleto em transmutações avançadas é perigoso, podendo romper o véu entre as dimensões. A Grande Obra exige perfeição, não pressa.", confirmacao: "Com sucesso, você navegou pelas fases mais complexas da alquimia. As transmutações avançadas obedecem ao seu comando. Você é, sem dúvida, um Adepto, um verdadeiro iniciado nos grandes mistérios." },
-        5: { superestimacao: "Você se proclamou um Mestre, mas seus resultados revelaram que a Pedra Filosofal é apenas uma miragem em suas mãos. Você produziu Ouro de Tolo. A verdade da alquimia é humilde, e seu conhecimento precisa ser temperado no fogo da prática.", quaseLa: "Você tentou criar a Pedra Filosofal, mas o que obteve foi um catalisador poderoso e instável. Com esse conhecimento parcial, você pode abrir um portal multidimensional perigoso. O poder que você busca exige responsabilidade e domínio absoluto.", confirmacao: "O brilho em suas mãos não deixa dúvidas. A Pedra Filosofal é real. Você compreende todos os segredos da matéria e do espírito. Certamente, você está entre os maiores Alquimistas que já existiram." }
-    };
-
-    if (selfAssessedLevel <= 2 && score >= 80) {
-        feedbackMessage = "Você se apresentou como um mero aprendiz, mas seus resultados brilham com a sabedoria de um Mestre. A humildade é uma virtude, mas não se engane: um poder alquímico imenso reside em você.";
-    } else {
-        const successRate = totalQuestionsOfLevel > 0 ? correctAnswersOfLevel / totalQuestionsOfLevel : 0;
-        
-        if (successRate < 0.3) {
-            feedbackMessage = feedbackMatrix[selfAssessedLevel].superestimacao;
-        } else if (successRate < 1) {
-            feedbackMessage = feedbackMatrix[selfAssessedLevel].quaseLa;
-        } else {
-            feedbackMessage = feedbackMatrix[selfAssessedLevel].confirmacao;
-        }
-    }
-
-    return { rank: rank.rank, feedbackMessage };
-  }, [quizPhase, score, selfAssessedLevel, correctAnswersByLevel]);
-
+  // --- FUNÇÃO DE RENDERIZAÇÃO CONDICIONAL ---
   const renderPhase = () => {
     switch (quizPhase) {
       case 'welcome':
@@ -429,6 +434,7 @@ export default function PromptAlchemistQuiz() {
     }
   };
 
+  // --- RETORNO FINAL DO JSX ---
   return (
     <>
       <Head>
