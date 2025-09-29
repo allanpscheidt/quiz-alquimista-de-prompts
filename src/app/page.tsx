@@ -1,13 +1,12 @@
 "use client";
 
-// O useRef e a biblioteca de imagem foram removidos.
 import React, { useState, useMemo, FC, ReactNode } from 'react';
 import Head from 'next/head';
 import { motion, AnimatePresence } from 'framer-motion';
-// O ícone de Download foi removido.
 import { CheckCircle, XCircle, ChevronRight, Award, Sparkles, RotateCw, User } from 'lucide-react';
 
-// --- (O restante do seu código, como a base de dados de perguntas, permanece o mesmo) ---
+// --- INÍCIO DA ZONA SEGURA (TODA A LÓGICA FOI MOVIDA PARA CÁ) ---
+
 // --- ESTRUTURA DE DADOS ---
 type Question = {
   question: string;
@@ -178,7 +177,6 @@ const ProgressBar: FC<{ value: number; max: number }> = ({ value, max }) => {
   );
 };
 
-// Componente do Card de volta ao formato simples, sem forwardRef
 const QuizCard: FC<{ children: ReactNode; className?: string }> = ({ children, className }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -190,6 +188,7 @@ const QuizCard: FC<{ children: ReactNode; className?: string }> = ({ children, c
     </motion.div>
   );
 
+// --- FIM DA ZONA SEGURA ---
 
 // --- COMPONENTE PRINCIPAL ---
 export default function PromptAlchemistQuiz() {
