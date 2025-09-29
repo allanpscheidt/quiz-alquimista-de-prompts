@@ -5,7 +5,7 @@ import Head from 'next/head';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, ChevronRight, Award, Sparkles, RotateCw, User } from 'lucide-react';
 
-// --- INÍCIO DA ZONA SEGURA (TODA A LÓGICA FOI MOVIDA PARA CÁ) ---
+// --- INÍCIO DA ZONA SEGURA (TODA A LÓGICA DE DADOS E FUNÇÕES FICA AQUI) ---
 
 // --- ESTRUTURA DE DADOS ---
 type Question = {
@@ -55,7 +55,7 @@ const quizData: QuizLevel[] = [
             { question: "Como aplicativos como o Google Fotos organizam suas imagens?", options: ["Por data apenas", "IA reconhece pessoas, objetos e locais nas fotos", "Aleatoriamente", "Por tamanho do arquivo"], correctAnswer: "IA reconhece pessoas, objetos e locais nas fotos", explanation: "A IA identifica automaticamente rostos, animais, objetos e lugares para organizar e categorizar suas fotos." },
             { question: "O que acontece quando você fala 'Ok Google' ou 'Ei Siri'?", options: ["O celular liga", "IA reconhece o comando de ativação e começa a ouvir", "Abre um aplicativo", "Toca uma música"], correctAnswer: "IA reconhece o comando de ativação e começa a ouvir", explanation: "A IA está sempre 'ouvindo' por essas palavras-chave específicas para saber quando você quer dar um comando." },
             { question: "Por que o teclado do celular às vezes completa suas palavras?", options: ["Adivinha o que você pensa", "IA prevê palavras baseada no que você digitou", "Copia mensagens antigas", "É programado com todas as palavras"], correctAnswer: "IA prevê palavras baseada no que você digitou", explanation: "A IA analisa padrões de texto e aprende seu estilo de escrita para sugerir palavras e completar frases." },
-            { question: "Como bancos detectam transações suspeitas?", options: ["Funcionários verificam tudo manualmente", "IA analisa padrões de gastos para identificar fraudes", "Bloqueia todas as compras online", "Só funciona durante o dia"], correctAnswer: "IA analisa padrões de gastos para identificar fraudes", explanation: "Bancos como o Nubank usam IA para aprender seus hábitos de gasto e identificar transações que fogem do padrão normal." },
+            { question: "Como bancos detectam transações suspeitas?", options: ["Funcionários verificam tudo manually", "IA analisa padrões de gastos para identificar fraudes", "Bloqueia todas as compras online", "Só funciona durante o dia"], correctAnswer: "IA analisa padrões de gastos para identificar fraudes", explanation: "Bancos como o Nubank usam IA para aprender seus hábitos de gasto e identificar transações que fogem do padrão normal." },
             { question: "Como aplicativos como 99 e Uber calculam o preço da corrida?", options: ["Preço fixo sempre", "IA considera distância, trânsito e demanda", "Motorista decide o preço", "Só pela distância"], correctAnswer: "IA considera distância, trânsito e demanda", explanation: "A IA analisa múltiplos fatores em tempo real para calcular um preço justo baseado nas condições atuais." },
             { question: "Por que alguns aplicativos de delivery sugerem restaurantes específicos?", options: ["São pagos para aparecer primeiro", "IA analisa suas preferências e histórico de pedidos", "Aparecem aleatoriamente", "Só mostram os mais baratos"], correctAnswer: "IA analisa suas preferências e histórico de pedidos", explanation: "A IA aprende com seus pedidos anteriores para sugerir restaurantes e pratos que você provavelmente gostará." },
             { question: "O que faz um chatbot de atendimento ao cliente funcionar?", options: ["Pessoas digitando respostas", "IA que entende perguntas e busca respostas adequadas", "Respostas automáticas programadas", "Conexão direta com o gerente"], correctAnswer: "IA que entende perguntas e busca respostas adequadas", explanation: "Chatbots usam IA para entender a intenção do cliente e fornecer respostas relevantes ou direcionar para atendimento humano." },
@@ -281,17 +281,19 @@ export default function PromptAlchemistQuiz() {
         5: { superestimacao: "Você se proclamou um Mestre, mas seus resultados revelaram que a Pedra Filosofal é apenas uma miragem em suas mãos. Você produziu Ouro de Tolo. A verdade da alquimia é humilde, e seu conhecimento precisa ser temperado no fogo da prática.", quaseLa: "Você tentou criar a Pedra Filosofal, mas o que obteve foi um catalisador poderoso e instável. Com esse conhecimento parcial, você pode abrir um portal multidimensional perigoso. O poder que você busca exige responsabilidade e domínio absoluto.", confirmacao: "O brilho em suas mãos não deixa dúvidas. A Pedra Filosofal é real. Você compreende todos os segredos da matéria e do espírito. Certamente, você está entre os maiores Alquimistas que já existiram." }
     };
 
-    if (selfAssessedLevel <= 2 && score >= 80) {
+    if (selfAssessedLevel > 0 && selfAssessedLevel <= 2 && score >= 80) {
         feedbackMessage = "Você se apresentou como um mero aprendiz, mas seus resultados brilham com a sabedoria de um Mestre. A humildade é uma virtude, mas não se engane: um poder alquímico imenso reside em você.";
     } else {
-        const successRate = totalQuestionsOfLevel > 0 ? correctAnswersOfLevel / totalQuestionsOfLevel : 0;
-        
-        if (successRate < 0.3) {
-            feedbackMessage = feedbackMatrix[selfAssessedLevel].superestimacao;
-        } else if (successRate < 1) {
-            feedbackMessage = feedbackMatrix[selfAssessedLevel].quaseLa;
-        } else {
-            feedbackMessage = feedbackMatrix[selfAssessedLevel].confirmacao;
+        if (selfAssessedLevel > 0) {
+            const successRate = totalQuestionsOfLevel > 0 ? correctAnswersOfLevel / totalQuestionsOfLevel : 0;
+            
+            if (successRate < 0.3) {
+                feedbackMessage = feedbackMatrix[selfAssessedLevel].superestimacao;
+            } else if (successRate < 1) {
+                feedbackMessage = feedbackMatrix[selfAssessedLevel].quaseLa;
+            } else {
+                feedbackMessage = feedbackMatrix[selfAssessedLevel].confirmacao;
+            }
         }
     }
 
@@ -398,7 +400,6 @@ export default function PromptAlchemistQuiz() {
             </div>
           </QuizCard>
         );
-
 
       case 'results':
         return (
